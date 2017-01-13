@@ -149,7 +149,7 @@ var default_params = function (type){
 	    params["delays"] = [3]
     }
     else {
-	    params["n_trials"] = 20
+	    params["n_trials"] = 2
 		params["stims"] = [1]
 		params["delays"] = [3]
 	}
@@ -419,6 +419,8 @@ var feedback=function(report_pos){
 		.style("stroke", "black")
 		.style("stroke-width","3px")
 		.attr("fill-opacity","1");
+
+	session["total_reward"] = math.round(session["trial_number"]*params["hit_reward"],2)
 }
 
 var feedback2 = function(report_pos,report_angle){
@@ -679,16 +681,11 @@ var draw_fix = function(screen,color){
 
 var update_stats = function(){
 
-	// In every entry of reward, change it to the actual performance.
-	rws=d3.selectAll("#reward")[0]
-	for (i=0;i<rws.length;i++)
-		rws[i].innerHTML = math.round(session["acc_rwd"]*100,2)
 
 	parms = default_params()
 
 	$("#total_trials")[0].innerHTML = params["total_trials"]
-	$("#total_duration")[0].innerHTML = math.floor(params["total_trials"]/80*10)+1
-	$("#max_reward")[0].innerHTML = params["max_reward"]
+
 	
 	tr=d3.selectAll("#total_reward")[0]
 	for (i=0;i<tr.length;i++)

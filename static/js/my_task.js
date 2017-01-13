@@ -268,6 +268,7 @@ var StroopExperiment = function(trials) {
 
 		case TASK:
 			psiTurk.showPage('repeat_task.html');
+			update_stats();
 
 			$("#repeat").click(function () { 
 				// MAKE SURE n_trials is not reset
