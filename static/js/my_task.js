@@ -90,7 +90,7 @@ FINISH = 4
 FIX_DUR = 500
 PRES_DUR = 500
 DELAY_DUR = 0//3000
-FEED_DUR = 10000
+FEED_DUR = 100
 FLIP_DUR = 50
 TOTAL_DUR = FIX_DUR + PRES_DUR + DELAY_DUR
 
@@ -171,7 +171,7 @@ var StroopExperiment = function(trials) {
 		// restore below
 		trials = session["trials"]
 		session["trials"] = 0
-		
+
 
 		psiTurk.recordTrialData({
 									'trial_number': session["trial_number"],
