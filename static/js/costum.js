@@ -149,12 +149,12 @@ var default_params = function (type){
 	    params["delays"] = [3]
     }
     else {
-	    params["n_trials"] = 2
+	    params["n_trials"] = 200
 		params["stims"] = [1]
-		params["delays"] = [3]
+		params["delays"] = [2]
 	}
 
-	params["total_trials"] = 2*params["n_trials"]
+	params["total_trials"] = params["n_trials"]
 	return params
 }
 
