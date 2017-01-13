@@ -565,10 +565,13 @@ var draw_stims=function(screen){
 
 	for(i=0;i<session["trial"].length;i++){
 		stim = session["trial"][i]
+		a = angle2pos(stim["pos_angle"],RADIUS,CENTER)
+		x=a[0]
+		y=a[1]
 		screen.insert("circle")
 			.attr("id","stim"+i)
-			.attr("cx", stim['pos_x']-STIM_SIZE)
-			.attr("cy", stim['pos_y']-STIM_SIZE)
+			.attr("cx", x-STIM_SIZE)
+			.attr("cy", y-STIM_SIZE)
 			.attr("r", STIM_SIZE)
 			.style("fill", "black")
 			.style("stroke", "black")

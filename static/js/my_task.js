@@ -77,7 +77,7 @@ WHEEL_X = 600
 WHEEL_Y = 600
 CENTER = [SCR_X/2,SCR_X/2]
 STIM_SIZE=10
-RADIUS = WHEEL_Y/3.2
+RADIUS = WHEEL_Y/3//3.2
 
 // Task stage codes
 FIX=0
@@ -163,6 +163,7 @@ var StroopExperiment = function(trials) {
 
 		report_pos = angle2pos(report_angle,250,CENTER);
 		report_pos = [report_x,report_y];
+
 		report_on_screen = [report_x,report_y]
 
 		rt = new Date().getTime() - session["wheel_on"];
@@ -179,6 +180,7 @@ var StroopExperiment = function(trials) {
 									'phase':session["phase"],
 									'report_pos': report_pos,
 									'report_pos': report_angle,
+									'target_angle': trial[0]["pos_angle"],
 									'trial': JSON.stringify(trial),
 									'acc_rwd': session["acc_rwd"],
 									'total_reward': math.round(session["trial_number"]*params["hit_reward"],2),
@@ -192,6 +194,7 @@ var StroopExperiment = function(trials) {
 		session_init()
 		session["trial_number"]++;
 		nanobar()
+		//console.log(circ_dist(report_angle,trial[0]["pos_angle"]))
 		feedback(report_pos)
 		setTimeout(function () {next()},FEED_DUR)
 	};
