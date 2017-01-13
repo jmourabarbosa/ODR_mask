@@ -252,7 +252,7 @@ var StroopExperiment = function(trials) {
 
 	var abort = function(){
 
-		value = math.round(session["trial_number"]*params["hit_reward"],2)
+		value = math.min(5,math.round(session["trial_number"]*params["hit_reward"],2))
 
 		answer = confirm("Do you want to leave with with a bonus of $"+value+"?");
 

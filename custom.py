@@ -164,6 +164,7 @@ def compute_bonus():
                 bonus=trial['total_reward']
 
         bonus = round(bonus,2)
+        bonus=min(5,bonus)
         print "bonus: ",bonus
         user.bonus = bonus
         db_session.add(user)
