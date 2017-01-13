@@ -90,7 +90,7 @@ FINISH = 4
 FIX_DUR = 500
 PRES_DUR = 500
 DELAY_DUR = 0//3000
-FEED_DUR = 1000
+FEED_DUR = 10000
 FLIP_DUR = 50
 TOTAL_DUR = FIX_DUR + PRES_DUR + DELAY_DUR
 
@@ -131,7 +131,6 @@ var StroopExperiment = function(trials) {
 		}
 		else {
 			session["trial"] = session["trials"][session["trial_number"]];
-			session["correct"] = get_correct();
 			session["delay"] = session["trial"][0]["delay"]*1000
 			session["state"] = FIX;
 			session["show"] = session["trial"][0]["show"]
@@ -161,33 +160,28 @@ var StroopExperiment = function(trials) {
 
 
 		report_angle = pos2angle([report_x,report_y],CENTER);
-		report_angle = circ_dist(report_angle,-session["wheel_offset"])
 
 		report_pos = angle2pos(report_angle,250,CENTER);
+		report_pos = [report_x,report_y];
 		report_on_screen = [report_x,report_y]
 
 		rt = new Date().getTime() - session["wheel_on"];
-
-		feedback(report_on_screen,report_angle)
 
 		// avoid saving all trials everytime
 		// restore below
 		trials = session["trials"]
 		session["trials"] = 0
+		
 
-		psiTurk.recordTrialData({	'load': session["trial"].length,
-									'delay': session["delay"],
-									'show': session["show"],
-									'trial_rwd': session["trial_rwd"],
-									'report_color': stretch(report_angle),
+		psiTurk.recordTrialData({
+									'trial_number': session["trial_number"],
 									'rt':rt,
 									'phase':session["phase"],
 									'report_pos': report_pos,
-									'report_on_screen': report_on_screen,
-									'n_drop': session["n_drop"],
+									'report_pos': report_angle,
 									'trial': JSON.stringify(trial),
 									'acc_rwd': session["acc_rwd"],
-									'total_reward': session["total_reward"],
+									'total_reward': math.round(session["trial_number"]*params["hit_reward"],2),
 									'session': JSON.stringify(session)
                                });
 
@@ -197,8 +191,8 @@ var StroopExperiment = function(trials) {
 		// reset session variables
 		session_init()
 		session["trial_number"]++;
-		//hide_wheel()
 		nanobar()
+		feedback(report_pos)
 		setTimeout(function () {next()},FEED_DUR)
 	};
 
@@ -219,10 +213,8 @@ var StroopExperiment = function(trials) {
 			case FIX:
 				screen = start_screen();
 				draw_fix(screen,"black");
-				//gen_catches();
 				session["state"] = PRES;
 				setTimeout(function () {show_trial()},FIX_DUR)
-
 				break;
 
 			// Presentation
@@ -237,11 +229,7 @@ var StroopExperiment = function(trials) {
 
 			// Delay 
 			case DELAY:
-				blank_stimuli()
-				//drop_stimuli()
-				if (!session["show"])
-					hide_stimulus()
-				//window.requestAnimationFrame(flicker_all_stim)
+				hide_stimulus()
 				session["state"] = REPORT;
 				setTimeout(function () {show_trial()},session["delay"])
 				break;
@@ -249,15 +237,10 @@ var StroopExperiment = function(trials) {
 			// Report
 			case REPORT:
 				session["state"] = FINISH
-				session["wheel_offset"] = math.random(0,2*math.pi)
-				draw_wheel(screen);
 				session["wheel_on"] = new Date().getTime();
-				blank_stimuli();
-				bold_correct(screen);
-				session["listening"] = 1;
+				session["listening"] = true
+				draw_fix(screen,"white");
 				$("#all_stims").click(response_handler);
-
-				//window.requestAnimationFrame(flicker_correct)
 				break;
 		}
 
@@ -265,17 +248,15 @@ var StroopExperiment = function(trials) {
 	};
 
 	var abort = function(){
-		// current accumulated money, minus penalty of 1$, plust 50cent minimum
-		value = math.round(session["acc_rwd"]*session["max_reward"]-0.5,2)
-		value = math.round(math.max(0,session["total_reward"]-0.5),2)
-		answer = confirm("Do you want to abort with a penalty of $0.5 and leave with with a bonus of $"+value+"?");
-		//answer = confirm("If you choose to abort, send the code "+uniqueId+" to me by email, please");
+
+		value = math.round(session["trial_number"]*params["hit_reward"],2)
+
+		answer = confirm("Do you want to leave with with a bonus of $"+value+"?");
 
 		if (answer) {
 			session["abort"]=true
 			psiTurk.showPage('thanks.html'); 
 			currentview = new Questionnaire();
-			session["total_reward"] = math.max(0,session["total_reward"]-0.5)
 		}
 	}
 
@@ -284,13 +265,12 @@ var StroopExperiment = function(trials) {
 
 		case TASK:
 			psiTurk.showPage('repeat_task.html');
-			session["total_reward"] = session["total_reward"]
 
-			update_stats()
 			$("#repeat").click(function () { 
-				params["max_reward"] = math.min(MAX_RWD,session["max_reward"]+0.5)
+				// MAKE SURE n_trials is not reset
 				gen_trials2(params,exp_callback)
 			});
+
 			$("#finish").click(function () {
 				psiTurk.showPage('thanks.html');
 				currentview = new Questionnaire();});
@@ -299,11 +279,11 @@ var StroopExperiment = function(trials) {
 		case TEST:
 			psiTurk.showPage('before_task.html');
 
-			update_stats();
 			$("#repeat").click(start_test);
 			$("#begin").click(function () {
 				session['phase'] = TASK; 
 				session["session"]=0;
+				session["trial_number"]=0;
 		 		params = default_params(TASK);
 		 		gen_trials2(params,exp_callback);
 		 	});
@@ -317,15 +297,10 @@ var StroopExperiment = function(trials) {
 
 	// Initialize experiment variables
 	session['trials'] = stretch_stims(trials);
-	session["total_trials"] = trials.length
-	session["n_correct"] = 0;
-	session['trial_rwd'] = 0;
 	session['trial_number'] = 0;
+	session["total_trials"] = trials.length
 	session['start_time'] = Date.now()
-	session['acc_rwd'] = 0
 	session["bar"] = undefined
-	session["max_reward"] = params["max_reward"]
-	session["total_reward"] = 0
 	session["abort"] = false 
 	session["sessions"]+=1
 	session_init();
@@ -333,7 +308,6 @@ var StroopExperiment = function(trials) {
 	// Load the stage.html snippet into the body of the page
 	psiTurk.showPage('stage.html');
 	session["bar"] = nanobar()
-	session["factor"] = compute_factor()
 
 	$("#abort").click(function () { abort()});
 
@@ -366,7 +340,6 @@ var currentview;
  ******************/
 $(window).load( function(){
 
-	psiTurk.showPage('color_blind.html');
-	color_blind_test(function(){start_test()})
+	start_test();
 	
 });

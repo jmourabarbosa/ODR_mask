@@ -111,24 +111,24 @@ var nanobar = function(){
 		  size: 100
 		};
 
-		var options2 = {
-		  classname: 'my-class',
-		  id: 'nanobar_correct',
-		  target: document.getElementById('bar2')
-		};
+		// var options2 = {
+		//   classname: 'my-class',
+		//   id: 'nanobar_correct',
+		//   target: document.getElementById('bar2')
+		// };
 	
 		session["bar"] = []
 		nanobar_total = new Nanobar(options1);
-		nanobar_correct = new Nanobar(options2);
+		// nanobar_correct = new Nanobar(options2);
 		session["bar"].push(nanobar_total)
-		session["bar"].push(nanobar_correct)
+		// session["bar"].push(nanobar_correct)
 	}
 
 	total = (session["trial_number"])/session["total_trials"]*100
 	correct = session["acc_rwd"]*100
 
 	session["bar"][0].go(total)
-	session["bar"][1].go(correct)
+	// session["bar"][1].go(correct)
 
 	return session["bar"]
 }
@@ -140,21 +140,21 @@ function compute_rwd(dist){
 var default_params = function (type){
 
 	params={}
-	params["max_reward"] = 3
+	params["hit_reward"] = 0.01
 	params["total_reward"] = 0
 
 	if (type) { 
 	    params["n_trials"] = 1
-	    params["stims"] = [2]
+	    params["stims"] = [1]
 	    params["delays"] = [3]
     }
     else {
 	    params["n_trials"] = 20
-		params["stims"] = [2,3,4,5,6]
+		params["stims"] = [1]
 		params["delays"] = [3]
 	}
 
-	params["total_trials"] = 2*params["n_trials"]*params["stims"].length*(params["delays"].length) 
+	params["total_trials"] = 2*params["n_trials"]
 	return params
 }
 
@@ -409,8 +409,19 @@ var session_init=function(){
 	session["background"] = WHITE
 }
 
+var feedback=function(report_pos){
 
-var feedback = function(report_pos,report_angle){
+	screen.insert("circle")
+		.attr("cx", report_pos[0])
+		.attr("cy", report_pos[1])
+		.attr("r", STIM_SIZE/2)
+		.style("fill", "black")
+		.style("stroke", "black")
+		.style("stroke-width","3px")
+		.attr("fill-opacity","1");
+}
+
+var feedback2 = function(report_pos,report_angle){
 
 	report_angle = stretch(report_angle)
 	//hide_stimulus()
@@ -447,7 +458,7 @@ var feedback = function(report_pos,report_angle){
 
 		else{
 			session["trial_rwd"] =rwd_amount
-			session["total_reward"] = rwd_amount
+			session["total_reward"] += rwd_amount
 		}
 
 
@@ -559,7 +570,7 @@ var draw_stims=function(screen){
 			.attr("cx", stim['pos_x']-STIM_SIZE)
 			.attr("cy", stim['pos_y']-STIM_SIZE)
 			.attr("r", STIM_SIZE)
-			.style("fill", encapsulate_rgb(angle2rgb(stretch(stim['color']))))
+			.style("fill", "black")
 			.style("stroke", "black")
 			.style("stroke-width","0px")
 			.attr("fill-opacity","1")
@@ -632,63 +643,7 @@ var drop_stimuli = function(){
 	}
 }
 
-var draw_wheel2 = function(screen){
-	screen
-		.insert("svg:image")
-		.attr("id","wheel")
-		.attr('x',CENTER[0]-WHEEL_X/2)
-		.attr('y',CENTER[1]-WHEEL_Y/2)
-		.attr('width', WHEEL_X)
-		.attr('height', WHEEL_Y)
-		.attr("xlink:href",images[session["wheel_n"]])
-}
 
-function draw_wheel (screen) {
-    var width = width = parseInt(d3.select("#all_stims").style("width"), 10);
-
-    var mySvg = d3.select("#all_stims")
-        
-    var myGroup = mySvg.append("g")
-    	.attr("id","wheel")
-        .attr("transform", "translate(" + (width / 2)  + "," + (width / 2) + ")" );
-
-    var myArc = d3.svg.arc()
-                  .innerRadius(width/2*0.75)
-                  .outerRadius(width/2);
-
-    var numberOfSegments = N_SEGS
-
-    var radians;
-    var degrees;
-
-    radians = (Math.PI * 2) / numberOfSegments;
-    degrees = 360 / numberOfSegments;
-
-    var transform = zeros(numberOfSegments,0)
-  
-    myArc.startAngle(function (d,i) { return radians * i } );
-    myArc.endAngle(function (d,i) { return radians * (i + 1) });
-  
-    var segments = myGroup.selectAll("path").data(d3.range(numberOfSegments));
-  
-    segments.enter().append("path");
-  
-    segments.attr('d', myArc)
-        .attr('fill', function(d,i) {
-          rotation = -deg2rad(90)+session["wheel_offset"]
-      	  angle = deg2rad((i) * degrees)
-      	  angle=circ_dist(angle,-rotation)
-      	  angle=stretch(angle)
-          return "hsl(" + (rad2deg(angle)) + ",100%,50%)";
-        });
-  
-    segments.exit().remove();
-  
-}
-
-var hide_wheel = function(screen){
-	d3.select("#wheel").remove()
-}
 
 var clean_trial = function() {
 	d3.select("#stims").selectAll("center").remove()
@@ -737,59 +692,6 @@ var update_stats = function(){
 		tr[i].innerHTML = math.round(session["total_reward"],2)
 
 
-}
-
-var color_blind_test = function(next_step){
-	figures =[ "Plate12.gif","Plate15.gif","Plate26.gif",
-				"Plate3.gif","Plate45.gif",
-				"Plate8.gif","Plate16.gif",
-				"Plate29.gif","Plate42.gif","Plate5.gif",
-				"Plate6.gif"];
-	// figures =[ "Plate12.gif"]
-
-	figure_codes = [12,15,26,3,45,8,16,29,42,5,6];
-
-	
-	img = document.createElement("IMG");
-	img.setAttribute("id","fig")
-    img.src = "/static/images/color_blind/"+figures[0]
-    question = $("#question").remove()
-    question[0].appendChild(img);
-    input = $("#input")
-    question.append(input)
-
-	root_q = $("#color_test")
-
-	for (i=0;i<figures.length;i++){
-		figure = figures[i]
-		id = "question"+i
-		question =  question.clone()
-		question[0].id = id
-		question[0].childNodes[1].src="/static/images/color_blind/"+figures[i]
-		question[0].childNodes[2].id="input"+i
-		root_q.append(question)
-	}
-
-	$("#next").click(function() {
-		inputs = d3.selectAll("input")[0]
-		pass = true
-		for (i=0;i<inputs.length;i++)
-			pass &= inputs[i].value==figure_codes[i]
-
-		if (pass){
-			next_step()
-		}
-		else{
-
-    psiTurk.saveData({
-            success: function(){
-                psiTurk.computeBonus('compute_bonus', function() {
-                	psiTurk.completeHIT(); // when finished saving compute bonus, the quit
-                }); 
-            }, 
-            });
-		}
-	});
 }
 
 var Questionnaire = function() {
