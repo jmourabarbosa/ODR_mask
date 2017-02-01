@@ -9,6 +9,31 @@
 
         <form id="postquiz" action="debrief" method="post">
 
+            <!-- beginning of a question -->
+            <div class="row question">
+                <div class="col-md-8">
+                    On a scale of 1-10 (where 10 is very often), please rate how often <b>you closed your eyes</b> during the flashings:
+                </div>
+                <div class="col-md-4">
+                    <select id="flash" name="flash">
+                        <option value="10">10 - Closed my eyes during every flashing</option>
+                        <option value="9">9</option>
+                        <option value="8">8</option>
+                        <option value="7">7</option>
+                        <option value="6">6</option>
+                        <option value="5"> 5 - half of the time</option>
+                        <option value="4">4</option>
+                        <option value="3">3</option>
+                        <option value="2">2</option>
+                        <option value="1">1</option>
+                        <option value="0">0 - never</option>
+                        <option value="-1" SELECTED >N/A</option>
+
+                    </select>
+                </div>
+            </div>
+            <!-- end of a question -->
+
 
             <!-- beginning of a question -->
             <div class="row question">
@@ -67,7 +92,7 @@
                     On a scale of 1-10 (where 10 is the most often), please rate how often did you <b>looked at single items</b> instead of focusing on the blak box:
                 </div>
                 <div class="col-md-4">
-                    <select id="difficulty" name="difficulty">
+                    <select id="fixation" name="fixation">
                         <option value="10">10 - Always looked at single items</option>
                         <option value="9">9</option>
                         <option value="8">8</option>
@@ -92,7 +117,7 @@
                     On a scale of 1-10 (where 10 is followd the most), please tell us <b>how much did you follow the instructions</b> 
                 </div>
                 <div class="col-md-4">
-                    <select id="difficulty" name="difficulty">
+                    <select id="rules" name="rules">
                         <option value="10">10 - Always followed</option>
                         <option value="9">9</option>
                         <option value="8">8</option>

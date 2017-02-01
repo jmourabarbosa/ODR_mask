@@ -163,8 +163,9 @@ def compute_bonus():
             if trial["phase"]==TASK:
                 bonus=trial['total_reward']
 
-        bonus = round(bonus,2)
-        bonus=min(5,bonus)
+        if bonus > 5:
+            bonus*=1.1
+        bonus = round(bonus+0.2,2)
         print "bonus: ",bonus
         user.bonus = bonus
         db_session.add(user)
@@ -195,9 +196,13 @@ def get_stims():
     params["n_trials"]  = int(request.args['n_trials'])
     params["stims"]  = request.args['stims']
     params["delays"]  = request.args['delays']
+    params["freqs"]  = request.args['freqs']
+
 
     params["stims"]  = map(int,params["stims"].split(","))
     params["delays"] = map(int,params["delays"].split(","))
+    params["freqs"] = map(int,params["freqs"].split(","))
+
 
 
     try:
@@ -223,19 +228,14 @@ def load_from_db(params):
     if 0 in params["delays"]:
         params["delays"].pop(params["delays"].index(0))
 
-    for show in [0,1]:
+    for freq in params["freqs"]:
         for delay in params["delays"]:
             for stim in params["stims"]:
                 trials = all_trials[stim-1]
                 trial_idx = gen_trial_idx(len(trials),params["n_trials"])
                 # need to add delay here
-                trialset += add_cond(trials[trial_idx].tolist(),["delay","show"],[delay,show])
+                trialset += add_cond(trials[trial_idx].tolist(),["delay","freq"],[delay,freq])
 
-    # for stim in params["stims"]:
-    #     trials = all_trials[stim-1]
-    #     trial_idx = gen_trial_idx(len(trials),params["n_trials"])
-    #     # need to add delay here
-    #     trialset += add_cond(trials[trial_idx].tolist(),["delay","show"],[0,0])
 
     return trialset
 

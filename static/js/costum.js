@@ -133,28 +133,41 @@ var nanobar = function(){
 	return session["bar"]
 }
 
-function compute_rwd(dist){
-	rwd = 1/math.exp(dist)
-	return rwd
+function compute_rwd(){
+
+	if (session["sessions"] > 0){
+		sess = session["sessions"] - 1
+	
+		return math.round(session["trial_number"]*params["hit_reward"] + sess*session["total_trials"]*params["hit_reward"]-session["fix_break"]*params["hit_reward"]*5,2)
+	}
+
+	else{
+		return math.round(session["trial_number"]*params["hit_reward"]-session["fix_break"]*params["hit_reward"]*5,2)
+
+	}
+
 }
 var default_params = function (type){
 
 	params={}
-	params["hit_reward"] = 0.01
+	params["hit_reward"] = 0.005
 	params["total_reward"] = 0
 
 	if (type) { 
 	    params["n_trials"] = 1
 	    params["stims"] = [1]
-	    params["delays"] = [3]
+	    params["delays"] = [1]
+	    params["freqs"] = [0,-10]
     }
     else {
-	    params["n_trials"] = 200
+	    params["n_trials"] = 100
 		params["stims"] = [1]
-		params["delays"] = [2]
+		params["delays"] = [1]
+		params["freqs"] = [0,-10,-10]
+
 	}
 
-	params["total_trials"] = params["n_trials"]
+	params["total_trials"] = params["freqs"].length*params["n_trials"]
 	return params
 }
 
@@ -287,35 +300,48 @@ var flicker_correct = function(){
 
 var flicker_background=function(){
 
+	if (session["state"] == DELAY)
+	{ 
+		background.setAttribute("style","background-color: lightgray")
+		body.setAttribute("style","background-color: lightgray")
+		cont.setAttribute("style","background-color: lightgray")
+		session["background"]=BLACK
+		return 
+	}
+
+	
+
 	background=d3.select("#all_stims")[0][0]
 	body=d3.select("body")[0][0]
 	cont=d3.select("#container-exp")[0][0]
 
 
-	if (session["state"] != REPORT){
-		background.setAttribute("style","background-color: white")
-		body.setAttribute("style","background-color: white")
-		cont.setAttribute("style","background-color: white")
-
-
-		session["background"]=WHITE
-		return
-	}
-
-
-	background.setAttribute("style","background-color: white")
-	body.setAttribute("style","background-color: white")
-	cont.setAttribute("style","background-color: white")
-
-
-	session["background"]=WHITE
-
-	if(oscilate(session["freq"])<0){
+	// horrible coupling of condition, improve this
+	if (!session["flashing"]){
+		console.log("no flicker",session["freq"])
 		background.setAttribute("style","background-color: lightgray")
 		body.setAttribute("style","background-color: lightgray")
 		cont.setAttribute("style","background-color: lightgray")
 
-		session["background"] = BLACK
+
+		session["background"]=BLACK
+		return
+	}
+
+
+	background.setAttribute("style","background-color: lightgray")
+	body.setAttribute("style","background-color: lightgray")
+	cont.setAttribute("style","background-color: lightgray")
+
+
+	session["background"]=BLACK
+
+	if(oscilate(session["freq"])<0){
+		background.setAttribute("style","background-color: white")
+		body.setAttribute("style","background-color: white")
+		cont.setAttribute("style","background-color: white")
+
+		session["background"] = WHITE
 	}
 
 	window.requestAnimationFrame(flicker_background)
@@ -406,11 +432,10 @@ var session_init=function(){
 	session['catch_rt'] = []
 	session['n_catch'] = 0
 	session['catch_t'] = math.Infinity
-	session["background"] = WHITE
+	session["background"] = BLACK
 }
 
 var feedback=function(report_pos){
-
 	screen.insert("circle")
 		.attr("cx", report_pos[0])
 		.attr("cy", report_pos[1])
@@ -584,16 +609,43 @@ var draw_stims=function(screen){
 }
 
 
+var draw_mask=function(screen){
+		w=$("#all_stims")[0]["width"]["baseVal"]["value"]
+		h=$("#all_stims")[0]["height"]["baseVal"]["value"]
+
+		for(i=0;i<500;i++){
+		stim = session["trial"][i]
+		x=math.random()*w
+		y=math.random()*h
+		ang = math.random()*2*math.pi
+		rad = math.random()*0.8*RADIUS+0.5*RADIUS
+
+		a = angle2pos(ang,rad,CENTER)
+		x=a[0]
+		y=a[1]
+		screen.insert("circle")
+			.attr("id","stim"+i)
+			.attr("cx", x-STIM_SIZE)
+			.attr("cy", y-STIM_SIZE)
+			.attr("r", STIM_SIZE)
+			.style("fill", "black")
+			.style("stroke", "black")
+			.style("stroke-width","0px")
+			.attr("fill-opacity","1")
+
+	}
+}
+
 var flip_background=function(){
 	background=d3.select("#all_stims")[0][0]	
 
-	if (session["background"] == WHITE){
-		background.setAttribute("style","background-color: lightgray")
-		session["background"] = BLACK
+	if (session["background"] == BLACK){
+		background.setAttribute("style","background-color: white")
+		session["background"] = WHITE
 	}
 	else{
-		background.setAttribute("style","background-color: white")
-		session["background"]=WHITE
+		background.setAttribute("style","background-color: lightgray")
+		session["background"]=BLACK
 	}
 }
 
@@ -603,7 +655,7 @@ var hide_stimulus = function(){
 
 	while (n_stims) {
 		var stim = all_stims[n_stims-1];
-		stim.setAttribute("style","fill: lightgray");
+		stim.setAttribute("style","fill: white");
 		stim.setAttribute("fill-opacity","0")
 		n_stims--
 	}
@@ -643,7 +695,7 @@ var drop_stimuli = function(){
 			not_done = stim in session["dropped"]
 		}
 		session["dropped"].push(stim)
-		all_stims[stim].setAttribute("style","fill: white");
+		all_stims[stim].setAttribute("style","fill: lightgray");
 		n_drop--
 	}
 }
@@ -662,6 +714,13 @@ var start_screen = function(){
 			  .attr("id", "all_stims")
 			  .attr("width", SCR_X)
 			  .attr("height", SCR_Y)
+
+	background=d3.select("#all_stims")[0][0]
+	body=d3.select("body")[0][0]
+	cont=d3.select("#container-exp")[0][0]
+	background.setAttribute("style","background-color: lightgray")
+	body.setAttribute("style","background-color: lightgray")
+	cont.setAttribute("style","background-color: lightgray")
 	return screen
 }
 
